@@ -17,7 +17,7 @@ const effectTypes = {
 * @param {Object} effect The effect to convert to a Promise.
 * @returns {Promise} The converted effect Promise.
 */
-export function effectToPromise(effect) {
+export function effectToPromiseIterable(effect) {
   if(process.env.NODE_ENV === 'development') {
     throwInvariant(
       isEffect(effect),
@@ -27,18 +27,18 @@ export function effectToPromise(effect) {
 
   switch (effect.type) {
     case effectTypes.PROMISE:
-      return effect.factory(...effect.args).then((action) => [action]);
+      return [effect.factory(...effect.args)];
     case effectTypes.CALL:
-      return Promise.resolve([effect.factory(...effect.args)]);
+      return [Promise.resolve(effect.factory(...effect.args))];
     case effectTypes.BATCH:
-      return Promise.all(effect.effects.map(effectToPromise)).then(flatten);
+      return flatten(effect.effects.map(effectToPromiseIterable));
     case effectTypes.CONSTANT:
-      return Promise.resolve([effect.action]);
+      return [Promise.resolve(effect.action)];
     case effectTypes.NONE:
-      return Promise.resolve([]);
+      return [];
     case effectTypes.LIFT:
-      return effectToPromise(effect.effect).then((actions) =>
-        actions.map((action) => effect.factory(...effect.args, action))
+      return effectToPromiseIterable(effect.effect).map((p) =>
+        p.then((action) => effect.factory(...effect.args, action))
       );
   }
 }

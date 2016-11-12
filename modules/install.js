@@ -14,7 +14,7 @@ import {
   none,
   isEffect,
   isNone,
-  effectToPromise,
+  effectToPromiseIterable,
 } from './effects';
 
 /**
@@ -29,21 +29,17 @@ export function install() {
     const liftReducer = (reducer) => (state, action) => {
       const result = reducer(state, action);
       const [model, effect] = liftState(result);
-      if (isNone(currentEffect)) {
-        currentEffect = effect
-      } else {
-        currentEffect = batch([currentEffect, effect]);
-      }
+      currentEffect = effect
       return model;
     };
 
     const store = next(liftReducer(reducer), initialModel, enhancer);
 
     const runEffect = (originalAction, effect) => {
-      return effectToPromise(effect)
-        .then((actions) => {
-          return Promise.all(actions.map(dispatch));
-        })
+      return Promise.all(effectToPromiseIterable(effect)
+        .map((p) => {
+          return p.then(dispatch);
+        }))
         .catch((error) => {
           console.error(loopPromiseCaughtError(originalAction.type));
           throw error;
