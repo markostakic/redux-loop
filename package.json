@@ -14,7 +14,8 @@
     "url": "https://github.com/redux-loop/redux-loop/issues"
   },
   "peerDependencies": {
-    "redux": "^3.0.0"
+    "redux": "^3.0.0",
+    "es6-symbol": "^3.1.1"
   },
   "files": [
     "modules",
